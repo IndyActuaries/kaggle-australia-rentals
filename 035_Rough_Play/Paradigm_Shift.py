@@ -17,7 +17,7 @@ os.chdir(os.environ['UserProfile'])
 
 
 # Munge System PATH and Python PATH for Spark
-PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.4.1-bin-without-hadoop')
+PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.4.1-bin-hadoop2.6')
 os.environ['SPARK_HOME'] = str(PATH_SPARK)
 sys.path.append(str(PATH_SPARK / 'python'))
 for path_py4j in (PATH_SPARK / 'python' / 'lib').glob('py4j*.zip'):
