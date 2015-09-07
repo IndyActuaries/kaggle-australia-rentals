@@ -1,0 +1,15 @@
+python
+matplotlib
+numpy
+pandas
+pytables
+scikit-learn
+sqlalchemy
+pip
+pytest
+dateutil
+nltk
+sympy
+pywin32
+jdcal
+lxml
