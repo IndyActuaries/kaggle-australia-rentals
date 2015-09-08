@@ -23,7 +23,14 @@ sys.path.append(str(PATH_SPARK / 'python'))
 for path_py4j in (PATH_SPARK / 'python' / 'lib').glob('py4j*.zip'):
     sys.path.append(str(path_py4j))
 
+# Inform Spark of current Python environment
+PATH_CURRENT_ENV = Path(sys.executable).parent
+os.environ['PYSPARK_PYTHON'] = str(PATH_CURRENT_ENV)
 
+# Point Spark to a mostly fake Hadoop install to supress a couple warnings
+os.environ['HADOOP_HOME'] = r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark'
+
+# Now we're ready to do the real import
 import pyspark
 from pyspark import SparkContext, SparkConf
 
