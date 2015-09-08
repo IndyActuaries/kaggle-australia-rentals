@@ -6,6 +6,8 @@
 
 ### DEVELOPER NOTES:
   Likely just a throw-away playground.
+  Currently requires backporting bugfix in `pyspark/worker.py`:
+    Line 149 - Change "a+" to "rwb"
 """
 
 import os
@@ -23,8 +25,7 @@ for path_py4j in (PATH_SPARK / 'python' / 'lib').glob('py4j*.zip'):
     sys.path.append(str(path_py4j))
 
 # Inform Spark of current Python environment
-PATH_CURRENT_ENV = Path(sys.executable).parent
-os.environ['PYSPARK_PYTHON'] = str(PATH_CURRENT_ENV)
+os.environ['PYSPARK_PYTHON'] = sys.executable
 
 # Point Spark to a mostly fake Hadoop install to supress a couple warnings
 os.environ['HADOOP_HOME'] = r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark'
@@ -32,7 +33,8 @@ os.environ['HADOOP_HOME'] = r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark'
 # Now we're ready to do the real import
 import pyspark
 from pyspark import SparkContext, SparkConf
-
+from pyspark.sql import SQLContext
+import pyspark.sql.types as types
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
@@ -42,3 +44,33 @@ from pyspark import SparkContext, SparkConf
 conf = SparkConf().setAppName('playground').setMaster('local[3]')
 conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
 sc = SparkContext(conf=conf)
+sqlContext = SQLContext(sc)
+
+# Show converting a simple text file into an RDD
+lines = sc.textFile(r'W:\NWS\Australia_Rentals\005_Raw_Data\sample_submission.csv')
+header = lines.first()
+lines = lines.filter(lambda l: l != header)
+print(lines.take(42))
+parts = lines.map(lambda l: l.split(","))
+parts = parts.map(lambda p: [p[0], float(p[1])])
+print(parts.take(42))
+
+# Now confert the RDD into a richer DataFrame
+df = sqlContext.createDataFrame(
+    parts,
+    schema=types.StructType([
+        types.StructField(
+            "REN_ID",
+            types.StringType(),
+            nullable=False,
+            ),
+        types.StructField(
+            "REN_BASE_RENT",
+            types.FloatType(),
+            nullable=False,
+            ),
+        ]),
+    )
+print(df.schema)
+df.show()
+df.describe().show()
