@@ -15,7 +15,6 @@ from pathlib import Path
 # Temporary hack for dealing with SublimeREPL
 os.chdir(os.environ['UserProfile'])
 
-
 # Munge System PATH and Python PATH for Spark
 PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.4.1-bin-hadoop2.6')
 os.environ['SPARK_HOME'] = str(PATH_SPARK)
@@ -41,4 +40,5 @@ from pyspark import SparkContext, SparkConf
 
 
 conf = SparkConf().setAppName('playground').setMaster('local[3]')
+conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
 sc = SparkContext(conf=conf)
