@@ -74,3 +74,6 @@ df = sqlContext.createDataFrame(
 print(df.schema)
 df.show()
 df.describe().show()
+
+# Serialize somewhere silly as a parquet file
+df.write.save(r'C:\repos\trash\mysave.parquet')
