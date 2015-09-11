@@ -5,8 +5,7 @@
   Bury all the environment hacking.
 
 ### DEVELOPER NOTES:
-  Currently requires backporting bugfix in `pyspark/worker.py`:
-    Line 149 - Change "a+" to "rwb"
+  Aims for allowing execution on a barely modified system.
 """
 
 import os
@@ -14,7 +13,7 @@ import sys
 from pathlib import Path
 
 
-PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.4.1-bin-hadoop2.6')
+PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.5.0-bin-hadoop2.6')
 PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 
 #==============================================================================
