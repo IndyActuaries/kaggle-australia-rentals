@@ -43,23 +43,24 @@ PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 class SparkCluster(object):
     """Wrapper to control setting up, launching, and tearing down a local Spark cluster"""
 
+    _default_attributes = {
+        'path_spark': PATH_SPARK,
+        'path_hadoop': PATH_HADOOP_FAKE,
+        'local_ip': LOCAL_IP,
+
+        # Worker related parameters
+        'n_workers': 2,
+        'spark_worker_memory': '2G',
+        'spark_worker_cores': '1',
+        }
+
     def __init__(self, **kwargs):
         """Initialize attributes, but trigger no side-effects"""
 
         # Use **kwargs magic to place all parameters into attributes
-        default_attributes = {
-            'path_spark': PATH_SPARK,
-            'path_hadoop': PATH_HADOOP_FAKE,
-            'local_ip': LOCAL_IP,
-
-            # Worker related parameters
-            'n_workers': 2,
-            'spark_worker_memory': '2G',
-            'spark_worker_cores': '1',
-            }
-
-        default_attributes.update(kwargs) # Replace defaults with any input parameters
-        self.__dict__.update(default_attributes) # Place final attributes into their home
+        _gathered_attributes = SparkCluster._default_attributes.copy() # Copy in the defaults
+        _gathered_attributes.update(kwargs) # Replace defaults with any input parameters
+        self.__dict__.update(_gathered_attributes) # Place final attributes into their home
 
         # Setup a bucket to direct all filesystem artifact
         self.path_spark_local_dirs = Path(tempfile.mkdtemp(prefix='spark_local_dir'))
