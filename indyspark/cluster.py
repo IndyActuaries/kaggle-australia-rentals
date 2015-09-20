@@ -185,9 +185,9 @@ class SparkWorker(object):
 
 if __name__ == '__main__':
 
-    superman = SparkCluster()
+    superman = SparkCluster(n_workers=3)
     print(superman.path_spark_local_dirs)
-    superman.start_cluster(2)
+    superman.start_cluster()
 
     import pyspark
     from pyspark import SparkContext, SparkConf
