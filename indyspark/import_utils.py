@@ -31,11 +31,6 @@ def import_csv(
     """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
 
-    lines = sqlcon._sc.textFile(str(path_csv))
-    if header:
-        header_line = lines.first()
-        lines = lines.filter(lambda l: l != header_line)
-
     def _enrich_field(field_raw_value, field_type):
         """Convert a single raw string into the anticipated Python datatype for the field"""
         if isinstance(field_type, types.StringType):
@@ -53,6 +48,13 @@ def import_csv(
                 _enrich_field(field_raw_value, field_struct.dataType)
                 for field_raw_value, field_struct in zip(row, schema.fields)
                 ]
+
+    # Start defining the data pipeline
+    lines = sqlcon._sc.textFile(str(path_csv))
+
+    if header:
+        header_line = lines.first()
+        lines = lines.filter(lambda l: l != header_line)
 
     parts_enriched = lines.mapPartitions(_parse_lines)
 
