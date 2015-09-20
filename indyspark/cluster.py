@@ -106,6 +106,8 @@ class SparkCluster(object):
 
     def _start_master(self):
         """Start the master node"""
+        assert self.subprocess_master is None, 'Master has already been launched'
+
         with (self.path_spark_local_dirs / 'master_stdout_stderr.txt').open('w') as fh_log:
             self.subprocess_master = subprocess.Popen(
                 [
@@ -113,7 +115,7 @@ class SparkCluster(object):
                     'org.apache.spark.deploy.master.Master',
                     ],
                 stdout=fh_log,
-                stderr=subprocess.STDOUT
+                stderr=subprocess.STDOUT,
                 )
 
     def _stop_master(self):
@@ -158,7 +160,7 @@ class SparkWorker(object):
                     self.url_master,
                     ],
                 stdout=fh_log,
-                stderr=subprocess.STDOUT
+                stderr=subprocess.STDOUT,
                 )
 
     def stop_worker(self):
