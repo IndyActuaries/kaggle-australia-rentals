@@ -107,7 +107,7 @@ class SparkCluster(object):
         """Stop the full cluster"""
         for worker in self.workers:
             worker.stop_worker()
-        self._start_master()
+        self._stop_master()
 
     def _start_master(self):
         """Start the master node"""
