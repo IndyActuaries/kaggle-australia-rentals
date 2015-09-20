@@ -2,10 +2,11 @@
 ## CODE OWNERS: Shea Parkes
 
 ### OBJECTIVE:
-  Bury all the environment hacking.
+  Bury all the environment hacking needed to start a Spark context.
 
 ### DEVELOPER NOTES:
   Aims for allowing execution on a barely modified system.
+  Additional environment hacking is needed to start a Spark stand-alone cluster.
 """
 
 import os

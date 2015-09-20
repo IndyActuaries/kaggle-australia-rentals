@@ -8,4 +8,5 @@
   Should really just be imports.
 """
 
-from indyspark.setup import setup_spark_env
+from indyspark.setup.cluster import SparkCluster
+from indyspark.setup.environment import setup_spark_env

@@ -20,7 +20,7 @@ import socket
 import itertools
 from pathlib import Path
 
-import setup
+import indyspark.setup.environment
 
 
 # Spark is *very* particular about the IP used to access the master
@@ -40,8 +40,8 @@ class SparkCluster(object):
     """Wrapper to control setting up, launching, and tearing down a local Spark cluster"""
 
     _default_attributes = {
-        'path_spark': setup.PATH_SPARK,
-        'path_hadoop': setup.PATH_HADOOP_FAKE,
+        'path_spark': indyspark.setup.environment.PATH_SPARK,
+        'path_hadoop': indyspark.setup.environment.PATH_HADOOP_FAKE,
         'local_ip': LOCAL_IP,
 
         # Worker related parameters
@@ -74,7 +74,7 @@ class SparkCluster(object):
 
         # This function also makes pyspark importable
         #   - Not mandatory at this point, but nice to then use the cluster
-        setup.setup_spark_env(
+        indyspark.setup.environment.setup_spark_env(
             # Re-pass parameters since the (shared) defaults may have been overridden
             path_spark=self.path_spark,
             path_hadoop=self.path_hadoop,
