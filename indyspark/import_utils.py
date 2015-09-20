@@ -23,7 +23,7 @@ import pyspark.sql.types as types
 def import_csv(
         sqlcon,
         path_csv,
-        dict_schema,
+        schema,
         *,
         header=True,
         delimiter=','
@@ -31,12 +31,34 @@ def import_csv(
     """
     Read in a CSV to a rich Spark DataFrame.
     """
+    assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
+
     lines = sqlcon._sc.textFile(str(path_csv))
     if header:
         header_line = lines.first()
         lines = lines.filter(lambda l: l != header_line)
 
-    return lines
+    def enricher(field_raw_value, field_type):
+        """Convert a single raw string into the anticipated Python datatype for the field"""
+        if isinstance(field_type, types.StringType):
+            return field_raw_value
+        if isinstance(field_type, (types.IntegerType, types.LongType, types.ShortType)):
+            return int(field_raw_value)
+        if isinstance(field_type, (types.FloatType, types.DoubleType)):
+            return float(field_raw_value)
+
+    def parse_line(line, delimiter=delimiter, schema=schema):
+        """Parse a single line (raw string) into a list of rich data types"""
+        # Wastefully utilize a csv.reader object for a single line to handle messy csv nuances
+        for row in csv.reader([line], delimiter=delimiter):
+            return [
+                enricher(field_raw_value, field_type.dataType)
+                for field_raw_value, field_type in zip(row, schema.fields)
+                ]
+
+    parts_enriched = lines.map(parse_line)
+
+    return sqlcon.createDataFrame(parts_enriched, schema)
 
 
 if __name__ == '__main__':
