@@ -40,13 +40,15 @@ def import_csv(
         if isinstance(field_type, (types.FloatType, types.DoubleType)):
             return float(field_raw_value)
 
-    def _parse_lines(iterator, delimiter=delimiter, schema=schema):
+    _field_types = [field.dataType for field in schema.fields]
+
+    def _parse_lines(iterator, delimiter=delimiter, field_types=_field_types):
         """Parse an iterator of lines (raw strings) into lists of rich data types"""
         # Utilize a csv.reader object to handle messy csv nuances
         for row in csv.reader(iterator, delimiter=delimiter):
             yield [
-                _enrich_field(field_raw_value, field_struct.dataType)
-                for field_raw_value, field_struct in zip(row, schema.fields)
+                _enrich_field(field_raw_value, field_type)
+                for field_raw_value, field_type in zip(row, field_types)
                 ]
 
     # Start defining the data pipeline
