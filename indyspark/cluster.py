@@ -35,24 +35,34 @@ class SparkCluster(object):
     """Wrapper to control setting up, launching, and tearing down a local Spark cluster"""
 
     def __init__(self, path_spark=PATH_SPARK, path_hadoop=PATH_HADOOP_FAKE, local_ip=LOCAL_IP):
-        """Vomit everything into environment"""
+        """Initialize attributes, but trigger no side-effects"""
 
         # Absolute basic Spark_Home
         self.path_spark = path_spark
-        os.environ['SPARK_HOME'] = str(self.path_spark)
 
         # Point Spark to a mostly fake Hadoop install to supress a couple warnings
         self.path_hadoop = path_hadoop
-        os.environ['HADOOP_HOME'] = str(self.path_hadoop)
 
         self.local_ip = local_ip
 
         # Setup a bucket to direct all filesystem artifact
         self.path_spark_local_dirs = Path(tempfile.mkdtemp(prefix='spark_local_dir'))
-        os.environ['SPARK_LOCAL_DIRS'] = str(self.path_spark_local_dirs)
 
         # Redirect config file searching out of (shared) Spark_Home
         self.path_spark_conf_dir = self.path_spark_local_dirs / 'spark_conf_dir'
+
+        self.subprocess_master = None
+        self.url_master = 'spark://{}:7077'.format(self.local_ip)
+        self.next_worker_webui_port = 8081
+        self.workers = []
+
+    def _mangle_environment(self):
+        """Actually mangle environment to prepare for cluster"""
+
+        os.environ['SPARK_HOME'] = str(self.path_spark)
+        os.environ['HADOOP_HOME'] = str(self.path_hadoop)
+        os.environ['SPARK_LOCAL_DIRS'] = str(self.path_spark_local_dirs)
+
         self.path_spark_conf_dir.mkdir()
         os.environ['SPARK_CONF_DIR'] = str(self.path_spark_conf_dir)
 
@@ -67,13 +77,11 @@ class SparkCluster(object):
         # Inform Spark of current Python environment
         os.environ['PYSPARK_PYTHON'] = sys.executable
 
-        self.subprocess_master = None
-        self.url_master = 'spark://{}:7077'.format(self.local_ip)
-        self.next_worker_webui_port = 8081
-        self.workers = []
-
     def start_cluster(self, n_workers=4):
         """Start the full local cluster"""
+
+        self._mangle_environment()
+
         self._start_master()
         time.sleep(8.4)
 
@@ -89,7 +97,6 @@ class SparkCluster(object):
         for worker in self.workers:
             worker.start_worker()
             time.sleep(2.1)
-
 
     def stop_cluster(self):
         """Stop the full cluster"""
