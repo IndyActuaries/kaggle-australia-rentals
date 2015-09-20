@@ -61,7 +61,6 @@ class SparkCluster(object):
 
     def _mangle_environment(self):
         """Actually mangle environment to prepare for cluster"""
-
         os.environ['SPARK_HOME'] = str(self.path_spark)
         os.environ['HADOOP_HOME'] = str(self.path_hadoop)
         os.environ['SPARK_LOCAL_DIRS'] = str(self.path_spark_local_dirs)
@@ -81,8 +80,7 @@ class SparkCluster(object):
         os.environ['PYSPARK_PYTHON'] = sys.executable
 
     def start_cluster(self, n_workers=4):
-        """Start the full local cluster"""
-
+        """Start the full cluster"""
         self._mangle_environment()
 
         self._start_master()
@@ -103,7 +101,7 @@ class SparkCluster(object):
 
     def _start_master(self):
         """Start the master node"""
-        assert self.subprocess_master is None, 'Master has already been launched'
+        assert self.subprocess_master is None, 'Master has already been started'
 
         with (self.path_spark_local_dirs / 'master_stdout_stderr.txt').open('w') as fh_log:
             self.subprocess_master = subprocess.Popen(
@@ -117,11 +115,14 @@ class SparkCluster(object):
 
     def _stop_master(self):
         """Stop the master node"""
+        assert self.subprocess_master is not None, 'Master has not been started'
+        assert self.subprocess_master.returncode is None, 'Master has already stopped'
+
         self.subprocess_master.kill()
 
     @property
     def next_worker_webui_port(self):
-        """Return the next Worker WebUI Port and increment the count"""
+        """Return the next Worker WebUI Port (and increment the count)"""
         return next(self._next_worker_webui_port)
 
 
@@ -129,7 +130,7 @@ class SparkWorker(object):
     """Wrapper to control setup/teardown of single worker"""
 
     def __init__(self, master):
-        """Setup everything except actually launching (delay environment munging)"""
+        """Initialize attributes, but trigger no side-effects"""
         self.master = master
 
         self.worker_webui_port = self.master.next_worker_webui_port
@@ -138,17 +139,20 @@ class SparkWorker(object):
 
         self.subprocess = None
 
-    def start_worker(self):
-        """Actually mangle environment and launch the worker in a subprocess"""
-
-        assert self.subprocess is None, 'Worker has already been launched'
-
+    def _mangle_environment(self):
+        """Actually mangle environment to prepare for worker"""
         self.path_spark_worker_dir.mkdir(parents=True)
 
         os.environ['SPARK_WORKER_DIR'] = str(self.path_spark_worker_dir)
         os.environ['WORKER_WEBUI_PORT'] = str(self.worker_webui_port)
         os.environ['SPARK_WORKER_MEMORY'] = '2G'
         os.environ['SPARK_WORKER_CORES'] = '1'
+
+    def start_worker(self):
+        """Start this worker node"""
+        assert self.subprocess is None, 'Worker has already been started'
+
+        self._mangle_environment()
 
         with (self.path_spark_worker_dir / 'stdout_stderr.txt').open('w') as fh_log:
             self.subprocess = subprocess.Popen(
@@ -162,8 +166,8 @@ class SparkWorker(object):
                 )
 
     def stop_worker(self):
-        """Stop the worker"""
-        assert self.subprocess is not None, 'Worker has not been launched'
+        """Stop this worker node"""
+        assert self.subprocess is not None, 'Worker has not been started'
         assert self.subprocess.returncode is None, 'Worker has already stopped'
 
         self.subprocess.terminate()
