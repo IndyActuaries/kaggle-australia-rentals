@@ -74,15 +74,7 @@ class SparkCluster(object):
 
     def start_cluster(self, n_workers=4):
         """Start the full local cluster"""
-        with (self.path_spark_local_dirs / 'master_stdout_stderr.txt').open('w') as fh_log:
-            self.subprocess_master = subprocess.Popen(
-                [
-                    str(self.path_spark / 'bin' / 'spark-class.cmd'),
-                    'org.apache.spark.deploy.master.Master',
-                    ],
-                stdout=fh_log,
-                stderr=subprocess.STDOUT
-                )
+        self._start_master()
         time.sleep(8.4)
 
         for _ in range(n_workers):
@@ -103,6 +95,22 @@ class SparkCluster(object):
         """Stop the full cluster"""
         for worker in self.workers:
             worker.stop_worker()
+        self._start_master()
+
+    def _start_master(self):
+        """Start the master node"""
+        with (self.path_spark_local_dirs / 'master_stdout_stderr.txt').open('w') as fh_log:
+            self.subprocess_master = subprocess.Popen(
+                [
+                    str(self.path_spark / 'bin' / 'spark-class.cmd'),
+                    'org.apache.spark.deploy.master.Master',
+                    ],
+                stdout=fh_log,
+                stderr=subprocess.STDOUT
+                )
+
+    def _stop_master(self):
+        """Stop the master node"""
         self.subprocess_master.kill()
 
 
