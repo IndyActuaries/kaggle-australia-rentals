@@ -28,9 +28,7 @@ def import_csv(
         header=True,
         delimiter=','
     ):
-    """
-    Read in a CSV to a rich Spark DataFrame.
-    """
+    """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
 
     lines = sqlcon._sc.textFile(str(path_csv))
@@ -47,16 +45,16 @@ def import_csv(
         if isinstance(field_type, (types.FloatType, types.DoubleType)):
             return float(field_raw_value)
 
-    def _parse_line(line, delimiter=delimiter, schema=schema):
-        """Parse a single line (raw string) into a list of rich data types"""
-        # Wastefully utilize a csv.reader object for a single line to handle messy csv nuances
-        for row in csv.reader([line], delimiter=delimiter):
-            return [
+    def _parse_lines(iterator, delimiter=delimiter, schema=schema):
+        """Parse an iterator of lines (raw strings) into lists of rich data types"""
+        # Utilize a csv.reader object to handle messy csv nuances
+        for row in csv.reader(iterator, delimiter=delimiter):
+            yield [
                 _enrich_field(field_raw_value, field_struct.dataType)
                 for field_raw_value, field_struct in zip(row, schema.fields)
                 ]
 
-    parts_enriched = lines.map(_parse_line)
+    parts_enriched = lines.mapPartitions(_parse_lines)
 
     return sqlcon.createDataFrame(parts_enriched, schema)
 
