@@ -38,7 +38,7 @@ def import_csv(
         header_line = lines.first()
         lines = lines.filter(lambda l: l != header_line)
 
-    def enricher(field_raw_value, field_type):
+    def _enrich_field(field_raw_value, field_type):
         """Convert a single raw string into the anticipated Python datatype for the field"""
         if isinstance(field_type, types.StringType):
             return field_raw_value
@@ -47,16 +47,16 @@ def import_csv(
         if isinstance(field_type, (types.FloatType, types.DoubleType)):
             return float(field_raw_value)
 
-    def parse_line(line, delimiter=delimiter, schema=schema):
+    def _parse_line(line, delimiter=delimiter, schema=schema):
         """Parse a single line (raw string) into a list of rich data types"""
         # Wastefully utilize a csv.reader object for a single line to handle messy csv nuances
         for row in csv.reader([line], delimiter=delimiter):
             return [
-                enricher(field_raw_value, field_type.dataType)
-                for field_raw_value, field_type in zip(row, schema.fields)
+                _enrich_field(field_raw_value, field_struct.dataType)
+                for field_raw_value, field_struct in zip(row, schema.fields)
                 ]
 
-    parts_enriched = lines.map(parse_line)
+    parts_enriched = lines.map(_parse_line)
 
     return sqlcon.createDataFrame(parts_enriched, schema)
 
