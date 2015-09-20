@@ -44,6 +44,8 @@ class SparkCluster(object):
         # Point Spark to a mostly fake Hadoop install to supress a couple warnings
         self.path_hadoop = path_hadoop
 
+        # Spark is *very* particular about the IP used to access the master
+        #  - it *must* match what is displayed in the master WebUI when connecting workers
         self.local_ip = local_ip
 
         # Setup a bucket to direct all filesystem artifact
