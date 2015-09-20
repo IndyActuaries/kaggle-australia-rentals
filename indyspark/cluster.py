@@ -21,10 +21,15 @@ import itertools
 from pathlib import Path
 
 
+# Spark is *very* particular about the IP used to access the master
+#  - it *must* match what is displayed in the master WebUI when connecting workers
 LOCAL_HOSTNAME = socket.gethostname()
 LOCAL_IP = socket.gethostbyname(LOCAL_HOSTNAME)
 
+# Root of a Spark distribution
 PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.5.0-bin-hadoop2.6')
+
+# Point Spark to a mostly fake Hadoop install to supress a couple warnings
 PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 
 #==============================================================================
@@ -35,18 +40,23 @@ PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 class SparkCluster(object):
     """Wrapper to control setting up, launching, and tearing down a local Spark cluster"""
 
-    def __init__(self, path_spark=PATH_SPARK, path_hadoop=PATH_HADOOP_FAKE, local_ip=LOCAL_IP):
+    def __init__(self, **kwargs):
         """Initialize attributes, but trigger no side-effects"""
 
-        # Absolute basic Spark_Home
-        self.path_spark = path_spark
+        # Use **kwargs magic to place all parameters into attributes
+        default_attributes = {
+            'path_spark': PATH_SPARK,
+            'path_hadoop': PATH_HADOOP_FAKE,
+            'local_ip': LOCAL_IP,
 
-        # Point Spark to a mostly fake Hadoop install to supress a couple warnings
-        self.path_hadoop = path_hadoop
+            # Worker related parameters
+            'n_workers': 2,
+            'spark_worker_memory': '2G',
+            'spark_worker_cores': '1',
+            }
 
-        # Spark is *very* particular about the IP used to access the master
-        #  - it *must* match what is displayed in the master WebUI when connecting workers
-        self.local_ip = local_ip
+        default_attributes.update(kwargs) # Replace defaults with any input parameters
+        self.__dict__.update(default_attributes) # Place final attributes into their home
 
         # Setup a bucket to direct all filesystem artifact
         self.path_spark_local_dirs = Path(tempfile.mkdtemp(prefix='spark_local_dir'))
@@ -79,14 +89,14 @@ class SparkCluster(object):
         # Inform Spark of current Python environment
         os.environ['PYSPARK_PYTHON'] = sys.executable
 
-    def start_cluster(self, n_workers=4):
+    def start_cluster(self):
         """Start the full cluster"""
         self._mangle_environment()
 
         self._start_master()
         time.sleep(8.4)
 
-        for _ in range(n_workers):
+        for _ in range(self.n_workers):
             self.workers.append(SparkWorker(self))
 
         for worker in self.workers:
@@ -145,8 +155,8 @@ class SparkWorker(object):
 
         os.environ['SPARK_WORKER_DIR'] = str(self.path_spark_worker_dir)
         os.environ['WORKER_WEBUI_PORT'] = str(self.worker_webui_port)
-        os.environ['SPARK_WORKER_MEMORY'] = '2G'
-        os.environ['SPARK_WORKER_CORES'] = '1'
+        os.environ['SPARK_WORKER_MEMORY'] = str(self.master.spark_worker_memory)
+        os.environ['SPARK_WORKER_CORES'] = str(self.master.spark_worker_cores)
 
     def start_worker(self):
         """Start this worker node"""
