@@ -32,6 +32,9 @@ PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.5.0-bin-hadoop2.6')
 # Point Spark to a mostly fake Hadoop install to supress a couple warnings
 PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 
+# Directly munging object attributes below, so pylint cannot follow them
+# pylint: disable=no-member
+
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
 #==============================================================================
