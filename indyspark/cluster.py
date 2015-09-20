@@ -20,17 +20,13 @@ import socket
 import itertools
 from pathlib import Path
 
+import setup
+
 
 # Spark is *very* particular about the IP used to access the master
 #  - it *must* match what is displayed in the master WebUI when connecting workers
 LOCAL_HOSTNAME = socket.gethostname()
 LOCAL_IP = socket.gethostbyname(LOCAL_HOSTNAME)
-
-# Root of a Spark distribution
-PATH_SPARK = Path(r'S:\ZQL\Software\Hotware\spark-1.5.0-bin-hadoop2.6')
-
-# Point Spark to a mostly fake Hadoop install to supress a couple warnings
-PATH_HADOOP_FAKE = Path(r'S:\ZQL\Software\Hotware\fake-hadoop-for-spark')
 
 # Directly munging object attributes below, so pylint cannot follow them
 # pylint: disable=no-member
@@ -44,8 +40,8 @@ class SparkCluster(object):
     """Wrapper to control setting up, launching, and tearing down a local Spark cluster"""
 
     _default_attributes = {
-        'path_spark': PATH_SPARK,
-        'path_hadoop': PATH_HADOOP_FAKE,
+        'path_spark': setup.PATH_SPARK,
+        'path_hadoop': setup.PATH_HADOOP_FAKE,
         'local_ip': LOCAL_IP,
 
         # Worker related parameters
@@ -75,23 +71,19 @@ class SparkCluster(object):
 
     def _mangle_environment(self):
         """Actually mangle environment to prepare for cluster"""
-        os.environ['SPARK_HOME'] = str(self.path_spark)
-        os.environ['HADOOP_HOME'] = str(self.path_hadoop)
+
+        # This function also makes pyspark importable
+        #   - Not mandatory at this point, but nice to then use the cluster
+        setup.setup_spark_env(
+            # Re-pass parameters since the (shared) defaults may have been overridden
+            path_spark=self.path_spark,
+            path_hadoop=self.path_hadoop,
+            )
+
         os.environ['SPARK_LOCAL_DIRS'] = str(self.path_spark_local_dirs)
 
         self.path_spark_conf_dir.mkdir()
         os.environ['SPARK_CONF_DIR'] = str(self.path_spark_conf_dir)
-
-        # Make PySpark importable into this python instance
-        #   - not necessarily the most logical place for this
-        #   - this is not needed to launch a Spark cluster via subprocess
-        #   - but it is nice to be able to then connect to it
-        sys.path.append(str(self.path_spark / 'python'))
-        for path_py4j in (self.path_spark / 'python' / 'lib').glob('py4j*.zip'):
-            sys.path.append(str(path_py4j))
-
-        # Inform Spark of current Python environment
-        os.environ['PYSPARK_PYTHON'] = sys.executable
 
     def start_cluster(self):
         """Start the full cluster"""
