@@ -17,6 +17,7 @@ import tempfile
 import subprocess
 import time
 import socket
+import itertools
 from pathlib import Path
 
 
@@ -53,7 +54,7 @@ class SparkCluster(object):
 
         self.subprocess_master = None
         self.url_master = 'spark://{}:7077'.format(self.local_ip)
-        self.next_worker_webui_port = 8081
+        self._next_worker_webui_port = itertools.count(8081)
         self.workers = []
 
     def _mangle_environment(self):
@@ -86,13 +87,7 @@ class SparkCluster(object):
         time.sleep(8.4)
 
         for _ in range(n_workers):
-            self.workers.append(SparkWorker(
-                self.path_spark,
-                self.next_worker_webui_port,
-                self.path_spark_local_dirs,
-                self.url_master,
-                ))
-            self.next_worker_webui_port += 1
+            self.workers.append(SparkWorker(self))
 
         for worker in self.workers:
             worker.start_worker()
@@ -122,30 +117,31 @@ class SparkCluster(object):
         """Stop the master node"""
         self.subprocess_master.kill()
 
+    @property
+    def next_worker_webui_port(self):
+        """Return the next Worker WebUI Port and increment the count"""
+        return next(self._next_worker_webui_port)
 
 
 class SparkWorker(object):
     """Wrapper to control setup/teardown of single worker"""
 
-    def __init__(self, path_spark, worker_webui_port, path_spark_worker_dir_root, url_master):
+    def __init__(self, master):
         """Setup everything except actually launching (delay environment munging)"""
-        self.path_spark = path_spark
-        self.worker_webui_port = worker_webui_port
-        self.path_spark_worker_dir_root = path_spark_worker_dir_root
-        self.path_spark_worker_dir = self.path_spark_worker_dir_root /\
+        self.master = master
+
+        self.worker_webui_port = self.master.next_worker_webui_port
+        self.path_spark_worker_dir = self.master.path_spark_local_dirs /\
             'worker-{}'.format(self.worker_webui_port)
-
-        self.path_spark_worker_dir.mkdir(parents=True)
-
-        self.url_master = url_master
 
         self.subprocess = None
 
-
     def start_worker(self):
-        """Actually launch the worker in a subprocess"""
+        """Actually mangle environment and launch the worker in a subprocess"""
 
         assert self.subprocess is None, 'Worker has already been launched'
+
+        self.path_spark_worker_dir.mkdir(parents=True)
 
         os.environ['SPARK_WORKER_DIR'] = str(self.path_spark_worker_dir)
         os.environ['WORKER_WEBUI_PORT'] = str(self.worker_webui_port)
@@ -155,9 +151,9 @@ class SparkWorker(object):
         with (self.path_spark_worker_dir / 'stdout_stderr.txt').open('w') as fh_log:
             self.subprocess = subprocess.Popen(
                 [
-                    str(self.path_spark / 'bin' / 'spark-class.cmd'),
+                    str(self.master.path_spark / 'bin' / 'spark-class.cmd'),
                     'org.apache.spark.deploy.worker.Worker',
-                    self.url_master,
+                    self.master.url_master,
                     ],
                 stdout=fh_log,
                 stderr=subprocess.STDOUT,
