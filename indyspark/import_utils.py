@@ -32,7 +32,7 @@ def import_csv(
     """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
 
-    def _enrich_field(field_raw_value, field_type, na_strings=na_strings):
+    def _enrich_field(field_raw_value, field_type):
         """Convert a single raw string into the anticipated Python datatype for the field"""
         if field_raw_value.lower() in na_strings:
             return None
@@ -45,13 +45,13 @@ def import_csv(
 
     _field_types = [field.dataType for field in schema.fields]
 
-    def _parse_lines(iterator, delimiter=delimiter, field_types=_field_types):
+    def _parse_lines(iterator):
         """Parse an iterator of lines (raw strings) into lists of rich data types"""
         # Utilize a csv.reader object to handle messy csv nuances
         for row in csv.reader(iterator, delimiter=delimiter):
             yield [
                 _enrich_field(field_raw_value, field_type)
-                for field_raw_value, field_type in zip(row, field_types)
+                for field_raw_value, field_type in zip(row, _field_types)
                 ]
 
     # Start defining the data pipeline

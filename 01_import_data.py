@@ -15,7 +15,7 @@ import indyspark
 indyspark.setup_spark_env()
 
 import indyspark.import_utils
-import indyaus.import_meta
+from indyaus.import_meta import import_meta
 
 import pyspark
 from pyspark import SparkContext, SparkConf
@@ -43,7 +43,7 @@ sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
 
-all_schemas = indyaus.import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
+all_schemas = import_meta(PATH_RAW / 'data_dictionary.xlsx')
 print(all_schemas['land_pins'])
 
 sample_dataframe = indyspark.import_utils.import_csv(
