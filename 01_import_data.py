@@ -8,16 +8,21 @@
   Likely just want to serialize the raw data into a clean, rich typed format.
 """
 
+from pathlib import Path
+
 import indyspark
 
 indyspark.setup_spark_env()
 
 import indyspark.import_utils
+import indyaus.import_meta
 
 import pyspark
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 import pyspark.sql.types as types
+
+PATH_RAW = Path(r'W:\NWS\Australia_Rentals\005_Raw_Data')
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
@@ -36,6 +41,20 @@ conf = SparkConf().setAppName('playground').setMaster(superman.url_master)
 # conf = conf.set('spark.eventlog.enabled', 'true')
 sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
+
+
+all_schemas = indyaus.import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
+print(all_schemas['land_pins'])
+
+sample_dataframe = indyspark.import_utils.import_csv(
+    sqlContext,
+    PATH_RAW / 'land_valuation_key.csv',
+    all_schemas['land_valuation_key'],
+    )
+
+sample_dataframe.show()
+
+
 
 sample_schema = types.StructType([
         types.StructField(
