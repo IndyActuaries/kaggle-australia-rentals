@@ -20,22 +20,39 @@ import pyspark.sql.types as types
 #==============================================================================
 
 
+def _determine_type(row_dict):
+    """Determine the Spark.DataType required for the field described by this row"""
+    if row_dict['data_type'] is None:
+        return types.StringType
+    if row_dict['data_type'].lower() == 'varchar2':
+        return types.StringType
+    if row_dict['data_type'].lower() == 'date':
+        return types.DateType
+    if row_dict['data_type'].lower() == 'number':
+        if row_dict['data_scale'] is None:
+            return types.IntegerType
+        if row_dict['data_scale'] == '0':
+            return types.IntegerType
+        else:
+            return types.FloatType
+
+
 def import_meta(path_meta, name_ws='DataDict'):
     """Read the contest metadata into a Dict of StructTypes"""
 
     # Load the workbook and then the worksheet
-    wb = load_workbook(
-        str(path_test),
+    wb_meta = load_workbook(
+        str(path_meta),
         read_only=True,
         keep_vba=False,
         data_only=True,
         )
-    ws = wb[name_ws]
+    ws_meta = wb_meta[name_ws]
 
     # Store the contents into a list of dicts
     #  - i.e. push the header into the rows
     row_dicts = []
-    for i_row, row in enumerate(ws.rows):
+    for i_row, row in enumerate(ws_meta.rows):
         if i_row == 0:
             field_names = [
                 cell.value.lower()
@@ -53,7 +70,7 @@ def import_meta(path_meta, name_ws='DataDict'):
     for row in row_dicts:
         table_schemas[row['table_name'].lower()].add(
             row['column_name'].lower(),
-            types.StringType(),
+            _determine_type(row)(),
             nullable=True,
             metadata={'comment': row['comments']},
             )
