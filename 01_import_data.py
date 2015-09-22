@@ -15,7 +15,7 @@ import indyspark
 indyspark.setup_spark_env()
 
 import indyspark.import_utils
-from indyaus.import_meta import import_meta
+import indyaus.import_meta as import_meta
 
 import pyspark
 from pyspark import SparkContext, SparkConf
@@ -43,13 +43,16 @@ sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
 
-all_schemas = import_meta(PATH_RAW / 'data_dictionary.xlsx')
-print(all_schemas['land_pins'])
+meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
+csv_headers = import_meta.import_csv_headers(PATH_RAW)
+meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
+
+print(meta_ordered['land_restrictions'])
 
 sample_dataframe = indyspark.import_utils.import_csv(
     sqlContext,
-    PATH_RAW / 'land_valuation_key.csv',
-    all_schemas['land_valuation_key'],
+    PATH_RAW / 'land_admin_areas.csv',
+    meta_ordered['land_admin_areas'],
     )
 
 sample_dataframe.show()
