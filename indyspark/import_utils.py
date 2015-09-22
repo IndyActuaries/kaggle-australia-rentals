@@ -27,13 +27,15 @@ def import_csv(
         *,
         header=True,
         delimiter=',',
-        na_strings={'na'}
+        na_strings={'na', 'n/a', 'null'}
     ):
     """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
 
     def _enrich_field(field_raw_value, field_type):
         """Convert a single raw string into the anticipated Python datatype for the field"""
+        if field_raw_value is None:
+            return None
         if field_raw_value.lower() in na_strings:
             return None
         if isinstance(field_type, types.StringType):
