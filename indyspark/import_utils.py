@@ -49,10 +49,12 @@ def import_csv(
             try:
                 return datetime.strptime(field_raw_value, '%Y-%m-%d').date()
             except ValueError:
-                try:
-                    return datetime.strptime(field_raw_value, '%d/%m/%Y').date()
-                except ValueError:
-                    return datetime.strptime(field_raw_value, '%d/%m/%Y %H:%M:%S').date()
+                return datetime.strptime(field_raw_value, '%d/%m/%Y').date()
+        if isinstance(field_type, types.TimestampType):
+            try:
+                return datetime.strptime(field_raw_value, '%d/%m/%Y %H:%M:%S')
+            except ValueError:
+                return datetime.strptime(field_raw_value, '%Y-%m-%d %H:%M:%S')
 
     _field_types = [field.dataType for field in schema.fields]
 
