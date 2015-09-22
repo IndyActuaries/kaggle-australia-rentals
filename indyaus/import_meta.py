@@ -20,8 +20,10 @@ import pyspark.sql.types as types
 #==============================================================================
 
 
-def _determine_type(row_dict):
+def _determine_type(row_dict, type_overrides):
     """Determine the Spark.DataType required for the field described by this row"""
+    if row_dict['column_name'].lower() in type_overrides:
+        return type_overrides[row_dict['column_name'].lower()]
     if row_dict['data_type'] is None:
         return types.StringType
     if row_dict['data_type'].lower() == 'varchar2':
@@ -37,8 +39,11 @@ def _determine_type(row_dict):
             return types.FloatType
 
 
-def import_meta(path_meta, name_ws='DataDict'):
+def import_meta(path_meta, name_ws='DataDict', type_overrides=None):
     """Read the contest metadata into a Dict(Files) of Dict(Fields) of StructField objects"""
+
+    # Load an optional dictionary of type overrides
+    type_overrides = type_overrides if type_overrides else dict()
 
     # Load the workbook and then the worksheet
     wb_meta = load_workbook(
@@ -70,7 +75,7 @@ def import_meta(path_meta, name_ws='DataDict'):
     for row in row_dicts:
         table_schemas[row['table_name'].lower()][row['column_name'].lower()] = types.StructField(
             row['column_name'].lower(),
-            _determine_type(row)(),
+            _determine_type(row, type_overrides)(),
             nullable=True,
             metadata={'comment': row['comments']},
             )
@@ -92,6 +97,7 @@ def import_csv_headers(path_csvs):
 
     return _headers
 
+
 def order_meta(meta_unordered, csv_headers):
     """Create the proper StructType objects for each CSV"""
     _ordered_meta = dict()
@@ -106,6 +112,7 @@ def order_meta(meta_unordered, csv_headers):
             print('MetaData mismatch for {}'.format(name_csv))
 
     return _ordered_meta
+
 
 if __name__ == '__main__':
 
