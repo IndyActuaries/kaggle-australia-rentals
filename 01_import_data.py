@@ -43,16 +43,22 @@ sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
 
-meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
+meta_unordered = import_meta.import_meta(
+    PATH_RAW / 'data_dictionary.xlsx',
+    type_overrides={
+        've_date_created': types.TimestampType,
+        've_date_modified': types.TimestampType,
+        },
+    )
 csv_headers = import_meta.import_csv_headers(PATH_RAW)
 meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
 
-print(meta_ordered['land_restrictions'])
+print(meta_ordered['valuation_entities'])
 
 sample_dataframe = indyspark.import_utils.import_csv(
     sqlContext,
-    PATH_RAW / 'land_admin_areas.csv',
-    meta_ordered['land_admin_areas'],
+    PATH_RAW / 'valuation_entities.csv',
+    meta_ordered['valuation_entities'],
     )
 
 sample_dataframe.show()
