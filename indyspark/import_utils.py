@@ -12,6 +12,7 @@
 """
 
 import csv
+from datetime import datetime
 
 import pyspark.sql.types as types
 
@@ -44,6 +45,11 @@ def import_csv(
             return int(field_raw_value)
         if isinstance(field_type, (types.FloatType, types.DoubleType)):
             return float(field_raw_value)
+        if isinstance(field_type, types.DateType):
+            try:
+                return datetime.strptime(field_raw_value, '%Y-%m-%d').date()
+            except ValueError:
+                return datetime.strptime(field_raw_value, '%d/%m/%Y').date()
 
     _field_types = [field.dataType for field in schema.fields]
 
