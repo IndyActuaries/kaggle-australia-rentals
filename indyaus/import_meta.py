@@ -31,7 +31,7 @@ def _determine_type(row_dict):
     if row_dict['data_type'].lower() == 'number':
         if row_dict['data_scale'] is None:
             return types.IntegerType
-        if row_dict['data_scale'] == '0':
+        if row_dict['data_scale'] == 0:
             return types.IntegerType
         else:
             return types.FloatType
