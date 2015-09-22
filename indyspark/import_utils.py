@@ -49,7 +49,10 @@ def import_csv(
             try:
                 return datetime.strptime(field_raw_value, '%Y-%m-%d').date()
             except ValueError:
-                return datetime.strptime(field_raw_value, '%d/%m/%Y').date()
+                try:
+                    return datetime.strptime(field_raw_value, '%d/%m/%Y').date()
+                except ValueError:
+                    return datetime.strptime(field_raw_value, '%d/%m/%Y %H:%M:%S').date()
 
     _field_types = [field.dataType for field in schema.fields]
 
