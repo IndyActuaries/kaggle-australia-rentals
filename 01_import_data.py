@@ -8,15 +8,21 @@
   Likely just want to serialize the raw data into a clean, rich typed format.
 """
 
+from pathlib import Path
+
 import indyspark
 
 indyspark.setup_spark_env()
 
 import indyspark.import_utils
+from indyaus.import_meta import import_meta
 
 import pyspark
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
+import pyspark.sql.types as types
+
+PATH_RAW = Path(r'W:\NWS\Australia_Rentals\005_Raw_Data')
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
@@ -36,6 +42,40 @@ conf = SparkConf().setAppName('playground').setMaster(superman.url_master)
 sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
-print(indyspark.import_utils.import_csv(sqlContext, r'W:\NWS\Australia_Rentals\005_Raw_Data\sample_submission.csv', {'bob': 2}).take(42))
+
+all_schemas = import_meta(PATH_RAW / 'data_dictionary.xlsx')
+print(all_schemas['land_pins'])
+
+sample_dataframe = indyspark.import_utils.import_csv(
+    sqlContext,
+    PATH_RAW / 'land_valuation_key.csv',
+    all_schemas['land_valuation_key'],
+    )
+
+sample_dataframe.show()
+
+
+
+sample_schema = types.StructType([
+        types.StructField(
+            "REN_ID",
+            types.StringType(),
+            nullable=False,
+            ),
+        types.StructField(
+            "REN_BASE_RENT",
+            types.FloatType(),
+            nullable=False,
+            ),
+        ])
+
+sample_dataframe = indyspark.import_utils.import_csv(
+    sqlContext,
+    r'E:\kaggle_play\australia-rentals\005_Raw_Data\sample_submission.csv',
+    sample_schema,
+    )
+
+sample_dataframe.show()
+sample_dataframe.describe().show()
 
 superman.stop_cluster()

@@ -90,7 +90,7 @@ class SparkCluster(object):
         self._mangle_environment()
 
         self._start_master()
-        time.sleep(8.4)
+        time.sleep(4.2)
 
         for _ in range(self.n_workers):
             self.workers.append(SparkWorker(self))
