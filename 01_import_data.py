@@ -22,7 +22,8 @@ from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 import pyspark.sql.types as types
 
-PATH_RAW = Path(r'W:\NWS\Australia_Rentals\005_Raw_Data')
+PATH_DATA = Path(r'W:\NWS\Australia_Rentals')
+PATH_RAW = PATH_DATA / '005_Raw_Data'
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
@@ -48,6 +49,22 @@ meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
 # Apply hacky overrides for where the sources don't match the data dictionary
 meta_unordered['valuation_entities']['ve_date_created'].dataType = types.TimestampType()
 meta_unordered['valuation_entities']['ve_date_modified'].dataType = types.TimestampType()
+meta_unordered['train'] = meta_unordered['wrk_train'].copy()
+meta_unordered['test'] = meta_unordered['wrk_train'].copy()
+del meta_unordered['test']['ren_base_rent']
+
+meta_unordered['sample_submission'] = {
+    'ren_id': types.StructField(
+        'ren_id',
+        types.StringType(),
+        nullable=False,
+        ),
+    'ren_base_rent': types.StructField(
+        'ren_base_rent',
+        types.FloatType(),
+        nullable=False,
+        ),
+    }
 
 csv_headers = import_meta.import_csv_headers(PATH_RAW)
 meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
