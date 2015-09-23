@@ -43,13 +43,12 @@ sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 
 
-meta_unordered = import_meta.import_meta(
-    PATH_RAW / 'data_dictionary.xlsx',
-    type_overrides={
-        've_date_created': types.TimestampType,
-        've_date_modified': types.TimestampType,
-        },
-    )
+meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
+
+# Apply hacky overrides for where the sources don't match the data dictionary
+meta_unordered['valuation_entities']['ve_date_created'].dataType = types.TimestampType()
+meta_unordered['valuation_entities']['ve_date_modified'].dataType = types.TimestampType()
+
 csv_headers = import_meta.import_csv_headers(PATH_RAW)
 meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
 
