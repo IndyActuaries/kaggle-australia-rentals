@@ -28,7 +28,7 @@ def import_csv(
         *,
         header=True,
         delimiter=',',
-        na_strings={'na', 'n/a', 'null'}
+        na_strings={'na', 'n/a', 'null', ''}
     ):
     """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
