@@ -99,23 +99,7 @@ sample_dataframe.show()
 
 
 
-sample_schema = types.StructType([
-        types.StructField(
-            "REN_ID",
-            types.StringType(),
-            nullable=False,
-            ),
-        types.StructField(
-            "REN_BASE_RENT",
-            types.FloatType(),
-            nullable=False,
-            ),
-        ])
 
-sample_dataframe = indyspark.import_utils.import_csv(
-    sqlContext,
-    r'E:\kaggle_play\australia-rentals\005_Raw_Data\sample_submission.csv',
-    sample_schema,
     )
 
 sample_dataframe.show()
