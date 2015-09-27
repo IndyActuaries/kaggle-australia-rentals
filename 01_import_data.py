@@ -70,9 +70,7 @@ meta_unordered['sample_submission'] = {
 csv_headers = import_meta.import_csv_headers(PATH_RAW)
 meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
 
-print(meta_ordered['valuation_entities'])
 
-sample_dataframe = indyspark.import_utils.import_csv(
 for filename, filemeta in meta_ordered.items():
     print('\n**** Processing {} ****\n'.format(filename))
     if filename in {
@@ -88,21 +86,5 @@ for filename, filemeta in meta_ordered.items():
             (PATH_DATA / '010_Imported_Data' / '{}.parquet'.format(filename)).as_uri(),
             mode='overwrite',
         )
-
-
-    sqlContext,
-    PATH_RAW / 'valuation_entities.csv',
-    meta_ordered['valuation_entities'],
-    )
-
-sample_dataframe.show()
-
-
-
-
-    )
-
-sample_dataframe.show()
-sample_dataframe.describe().show()
 
 superman.stop_cluster()
