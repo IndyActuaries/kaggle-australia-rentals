@@ -6,6 +6,7 @@
 
 ### DEVELOPER NOTES:
   Likely just want to serialize the raw data into a clean, rich typed format.
+  Is written as a procedure, not a library.
 """
 
 from pathlib import Path
@@ -14,34 +15,21 @@ import indyspark
 
 indyspark.setup_spark_env()
 
+from indyaus import get_spark_pieces, PATH_DATA
+
 import indyspark.import_utils
 import indyaus.import_meta as import_meta
 
-import pyspark
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SQLContext
 import pyspark.sql.types as types
 
-PATH_DATA = Path(r'W:\NWS\Australia_Rentals')
 PATH_RAW = PATH_DATA / '005_Raw_Data'
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
 #==============================================================================
 
-superman = indyspark.SparkCluster(n_workers=6, spark_worker_memory='4G')
-superman.start_cluster()
 
-
-conf = SparkConf().setAppName('aus_import').setMaster(superman.url_master)
-conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
-# conf = conf.set('spark.driver.memory', '2g') ## Too late to set this
-conf = conf.set('spark.executor.memory', '4g')
-conf = conf.set('spark.python.worker.memory', '4g')
-sc = SparkContext(conf=conf)
-sqlContext = SQLContext(sc)
-sqlContext.setConf('spark.sql.parquet.compression.codec', 'snappy')
-
+superman, sc, sqlContext = get_spark_pieces('aus_import')
 
 # Import the metadata (without proper field ordering)
 meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
