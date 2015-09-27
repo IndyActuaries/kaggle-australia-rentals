@@ -33,18 +33,17 @@ superman = indyspark.SparkCluster(n_workers=6, spark_worker_memory='4G')
 superman.start_cluster()
 
 
-conf = SparkConf().setAppName('playground').setMaster(superman.url_master)
+conf = SparkConf().setAppName('aus_import').setMaster(superman.url_master)
 conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
 # conf = conf.set('spark.driver.memory', '2g') ## Too late to set this
 conf = conf.set('spark.executor.memory', '4g')
 conf = conf.set('spark.python.worker.memory', '4g')
-# conf = conf.set('spark.python.worker.reuse', 'false')
-# conf = conf.set('spark.eventlog.enabled', 'true')
 sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
 sqlContext.setConf('spark.sql.parquet.compression.codec', 'snappy')
 
 
+# Import the metadata (without proper field ordering)
 meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
 
 # Apply hacky overrides for where the sources don't match the data dictionary
@@ -67,17 +66,13 @@ meta_unordered['sample_submission'] = {
         ),
     }
 
+# Sniff the CSV files to get the field metadata into the correct order
 csv_headers = import_meta.import_csv_headers(PATH_RAW)
 meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
 
-
+# Loop and import into a cleaner/richer storage format
 for filename, filemeta in meta_ordered.items():
     print('\n**** Processing {} ****\n'.format(filename))
-    if filename in {
-            'land',
-        }:
-        print('\n**** Skipping  ****\n'.format(filename))
-        continue
     indyspark.import_utils.import_csv(
         sqlContext,
         PATH_RAW / '{}.csv'.format(filename),
