@@ -15,14 +15,13 @@ import indyspark
 
 indyspark.setup_spark_env()
 
-from indyaus import get_spark_pieces
+from indyaus import get_spark_pieces, PATH_DATA
 
 import indyspark.import_utils
 import indyaus.import_meta as import_meta
 
 import pyspark.sql.types as types
 
-PATH_DATA = Path(r'W:\NWS\Australia_Rentals')
 PATH_RAW = PATH_DATA / '005_Raw_Data'
 
 #==============================================================================
