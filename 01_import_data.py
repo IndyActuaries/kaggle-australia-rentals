@@ -73,6 +73,23 @@ meta_ordered = import_meta.order_meta(meta_unordered, csv_headers)
 print(meta_ordered['valuation_entities'])
 
 sample_dataframe = indyspark.import_utils.import_csv(
+for filename, filemeta in meta_ordered.items():
+    print('\n**** Processing {} ****\n'.format(filename))
+    if filename in {
+            'land',
+        }:
+        print('\n**** Skipping  ****\n'.format(filename))
+        continue
+    indyspark.import_utils.import_csv(
+        sqlContext,
+        PATH_RAW / '{}.csv'.format(filename),
+        filemeta,
+        ).write.parquet(
+            (PATH_DATA / '010_Imported_Data' / '{}.parquet'.format(filename)).as_uri(),
+            mode='overwrite',
+        )
+
+
     sqlContext,
     PATH_RAW / 'valuation_entities.csv',
     meta_ordered['valuation_entities'],
