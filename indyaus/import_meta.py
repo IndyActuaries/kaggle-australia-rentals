@@ -72,7 +72,7 @@ def import_meta(path_meta, name_ws='DataDict'):
             row['column_name'].lower(),
             _determine_type(row)(),
             nullable=True,
-            metadata={'comment': row['comments']},
+            metadata={'comment': row['comments'] if row['comments'] else 'None'},
             )
 
     return table_schemas
