@@ -29,19 +29,20 @@ PATH_RAW = PATH_DATA / '005_Raw_Data'
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
 #==============================================================================
 
-superman = indyspark.SparkCluster(n_workers=3)
+superman = indyspark.SparkCluster(n_workers=6, spark_worker_memory='4G')
 superman.start_cluster()
 
 
 conf = SparkConf().setAppName('playground').setMaster(superman.url_master)
-# conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
-# conf = conf.set('spark.driver.memory', '2g')
-# conf = conf.set('spark.executor.memory', '2g')
-# conf = conf.set('spark.python.worker.memory', '2g')
+conf = conf.set('spark.serializer', 'org.apache.spark.serializer.KryoSerializer')
+# conf = conf.set('spark.driver.memory', '2g') ## Too late to set this
+conf = conf.set('spark.executor.memory', '4g')
+conf = conf.set('spark.python.worker.memory', '4g')
 # conf = conf.set('spark.python.worker.reuse', 'false')
 # conf = conf.set('spark.eventlog.enabled', 'true')
 sc = SparkContext(conf=conf)
 sqlContext = SQLContext(sc)
+sqlContext.setConf('spark.sql.parquet.compression.codec', 'snappy')
 
 
 meta_unordered = import_meta.import_meta(PATH_RAW / 'data_dictionary.xlsx')
