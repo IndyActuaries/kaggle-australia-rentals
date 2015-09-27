@@ -15,6 +15,7 @@ import csv
 from datetime import datetime
 
 import pyspark.sql.types as types
+from pyspark import StorageLevel
 
 #==============================================================================
 # LIBRARIES, LOCATIONS, LITERALS, ETC. GO ABOVE HERE
@@ -28,7 +29,7 @@ def import_csv(
         *,
         header=True,
         delimiter=',',
-        na_strings={'na', 'n/a', 'null'}
+        na_strings={'na', 'n/a', 'null', ''}
     ):
     """Read in a CSV to a rich Spark DataFrame."""
     assert isinstance(schema, types.StructType), '{} is not a pyspark StructType'.format(schema)
@@ -76,7 +77,10 @@ def import_csv(
 
     parts_enriched = lines.mapPartitions(_parse_lines)
 
-    return sqlcon.createDataFrame(parts_enriched, schema)
+    typed_dataframe = sqlcon.createDataFrame(parts_enriched, schema)
+    typed_dataframe.persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+    return typed_dataframe
 
 
 if __name__ == '__main__':
