@@ -77,12 +77,10 @@ def import_csv(
 
     parts_enriched = lines.mapPartitions(_parse_lines)
 
-    return parts_enriched
+    typed_dataframe = sqlcon.createDataFrame(parts_enriched, schema)
+    typed_dataframe.persist(StorageLevel.MEMORY_AND_DISK_SER)
 
-    # typed_dataframe = sqlcon.createDataFrame(parts_enriched, schema)
-    # typed_dataframe.persist(StorageLevel.MEMORY_AND_DISK_SER)
-
-    # return typed_dataframe
+    return typed_dataframe
 
 
 if __name__ == '__main__':
