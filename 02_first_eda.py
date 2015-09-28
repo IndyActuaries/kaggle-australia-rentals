@@ -49,14 +49,14 @@ train.filter(
 
 train.registerTempTable('train')
 sql_con.sql('''
-        select
-            ren_lease_length
-            ,count(*) as rowcnt
-            ,avg(ren_base_rent) as rent_avg
-        from train
-        group by ren_lease_length
-        order by rowcnt desc
-        ''').show()
+    select
+        ren_lease_length
+        ,count(*) as rowcnt
+        ,avg(ren_base_rent) as rent_avg
+    from train
+    group by ren_lease_length
+    order by rowcnt desc
+    ''').show()
 
 
 sql_con.read.parquet(str(PATH_IMPORTED / 'test.parquet')).show()
