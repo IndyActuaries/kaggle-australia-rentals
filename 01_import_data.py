@@ -9,8 +9,6 @@
   Is written as a procedure, not a library.
 """
 
-from pathlib import Path
-
 import indyspark
 
 indyspark.setup_spark_env()
